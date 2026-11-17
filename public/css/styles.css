@@ -1,0 +1,25 @@
+.head{
+    font-weight: bold;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    display: flex;
+    position:fixed;
+    gap: 20px;
+    top: 0;
+    padding: 10px;
+    width: 100%;
+    color: white;
+    background-color: #7ba760;
+
+}
+
+.foot{    
+    font-weight: bold;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    display:flex;
+    position:fixed;
+    bottom: 0;
+    padding: 25px;
+    width: 150%;
+    color: white;
+    background-color: #7ba760;
+}

@@ -1,0 +1,13 @@
+<footer>
+    <div class="foot">
+        <!-- <p>FOOTER TEST</p> -->
+
+        <% if(locals.books){ %>
+            <p>Currently there are <%= books.length %> Books on Sale!</p>
+        <% }else if (locals.books == 0){ %>
+            <p>There are currently no books available.</p>
+        <% }else{ %>
+            
+        <% } %>
+    </div>
+</footer>
