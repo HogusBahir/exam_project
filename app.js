@@ -14,9 +14,9 @@ const saltRounds = 10;
 const db_user = [
     { 
         "user_id": 0,
-        "name": "Jose D.",
-        "email": "yahirdeleon24@gmail.com",
-        "password": "password",
+        "name": "Non-Existent",
+        "email": "Idontexist@gmail.com",
+        "password": "SomethingToKeepTheDBopen",
         "fav_genre": "Fiction",
     },
 ];
@@ -31,7 +31,6 @@ app.use(express.static("public"));
 // app.use(express.static(path.join(import.meta.dirname, 'public')));
 app.use(bodyParser.urlencoded({extended:true}));
 
-// sdmflksdmflkmsdlkflksdmlkfmklsdmflkmlksdmlfkmdslfmldsmflsmdlkfmsdlkmfldskmflkdsmfdssdmflksdmflkmsdlkflksdmlkfmklsdmflkmlksdmlfkmdslfmldsmflsmdlkfmsdlkmfldskmflkdsmfds
 const sessionMiddleware = ()=>{
   return {
     secret: "SECRET-KEY-BOOK",
@@ -50,7 +49,7 @@ app.use(session(
 
 app.use(passport.initialize());
 app.use(passport.session());
-// sdmflksdmflkmsdlkflksdmlkfmklsdmflkmlksdmlfkmdslfmldsmflsmdlkfmsdlkmfldskmflkdsmfdssdmflksdmflkmsdlkflksdmlkfmklsdmflkmlksdmlfkmdslfmldsmflsmdlkfmsdlkmfldskmflkdsmfds
+
 
 //Register the /api to have the database and functions there
 app.use('/api', bookRoutes);
@@ -81,38 +80,12 @@ app.get('/register', (req, res)=>{
     res.render('register');
 });
 
-passport.use(new Strategy({ usernameField: "email" }, async function verify(email, password, cb) {
-  try {
-    const foundUser = db_user.find((user) => user.email === email);
-
-    if (!foundUser) {
-      return cb(null, false, { message: "User not found." });
-    }
-
-    bcrypt.compare(password, foundUser.password, (err, result) => {
-      if (err) {
-        console.error("Error comparing passwords!", err);
-        return cb(err);
-      }
-      
-      if (result) {
-        return cb(null, foundUser);
-      } else {
-        return cb(null, false);
-      }
-    });
-  } catch (err) {
-    console.error("Sorry! Something happened to passport.", err);
-    return cb(err);
-  }
-}));
-
-// Register Route
+// Register Route for POST
 app.post("/register", async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const name = req.body.name || "";         // Optional
-  const fav_genre = req.body.fav_genre || ""; // Optional
+  const name = req.body.name || "";
+  const fav_genre = req.body.fav_genre || ""; 
 
   try {
     const existingUser = db_user.find((user) => user.email === email);
@@ -128,12 +101,13 @@ app.post("/register", async (req, res) => {
       }
 
       // Automatically assign user_id as the next number after the maximum existing user_id
-      const nextId = db_user.length > 0 ? Math.max(...db_user.map((user) => user.user_id)) + 1 : 0;
+      const nextId = Math.max(...db_user.map((user) => user.user_id)) + 1;
 
+      const email_new = String(email).trim();
       const newUser = {
         user_id: nextId,
         name: name,
-        email: email.trim(),
+        email: email_new,
         password: hash,
         fav_genre: fav_genre
       };
@@ -155,22 +129,36 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// Login Route using passport.authenticate with custom callback
-app.post("/login", (req, res, next) => {
-  passport.authenticate("local", (err, user, info) => {
-    if (err) {
-      return next(err);
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  try {
+    const registeredUser = db_user.find((user) => user.email === email);
+    
+    if (registeredUser) {
+      // Note: If testing with the initial static db objects where passwords aren't hashed, 
+      // bcrypt.compare will return false unless you hash them or handle plaintext fallback. 
+      // Assuming you use bcrypt for registered users:
+      bcrypt.compare(password, registeredUser.password, (err, result) => {
+        if (err) {
+          console.error("Error comparing passwords!", err);
+          return res.status(500).send("Server error.");
+        }
+        
+        if (result) {
+          res.render("home");
+        } else {
+          res.send("Incorrect Password!");
+        }
+      });
+    } else {
+      res.send("User not found. Please register.");
     }
-    if (!user) {
-      return res.send("Invalid credentials.");
-    }
-    req.logIn(user, (err) => {
-      if (err) {
-        return next(err);
-      }
-      return res.render("home.ejs");
-    });
-  })(req, res, next);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Server error.");
+  }
 });
 
 passport.serializeUser((user, cb) => {
